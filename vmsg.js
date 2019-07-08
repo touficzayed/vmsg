@@ -261,7 +261,7 @@ export class Recorder {
     return this.initAudio().then(this.initWorker.bind(this));
   }
 
-  startRecording() {
+  startRecording(eventsPublisher) {
     if (!this.stream) throw new Error("missing audio initialization");
     if (!this.worker) throw new Error("missing worker initialization");
     this.blob = null;
@@ -272,6 +272,9 @@ export class Recorder {
     this.worker.postMessage({type: "start", data: this.audioCtx.sampleRate});
     this.encNode.onaudioprocess = (e) => {
       const samples = e.inputBuffer.getChannelData(0);
+      if (eventsPublisher!=null) {
+        eventsPubliser.publish('recorded-data', e.inputBuffer);
+      }
       this.worker.postMessage({type: "data", data: samples});
     };
     this.encNode.connect(this.audioCtx.destination);
